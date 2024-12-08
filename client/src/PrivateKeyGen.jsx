@@ -28,18 +28,24 @@ function PrivateKeyGen() {
         try {
              await server.post(`/fund`, body);
           } catch (ex) {
-           return setErrorMsg("funding failed, "+ ex?.message || ex);
+           throw  new Error("funding failed, "+ ex?.message ||ex?.response?.data?.message || ex);
           }
     }
 
     async function onPkeyGenSubmit(e) {
         e.preventDefault();
-        const pKey = createPrivateKey()
-        const addr = extractAddress(pKey)
-        await fund(pKey,addr);
-        setPrivateKey(pKey);
-        setAddress(addr);
-        setIsOpened(true);
+        try {
+            const pKey = createPrivateKey()
+            const addr = extractAddress(pKey)
+            await fund(pKey,addr);
+            setPrivateKey(pKey);
+            setAddress(addr);
+            setIsOpened(true);
+            setIsDBSaved(false);
+            setEncryptionPassword("");
+        } catch (error) {
+            return setErrorMsg("Private Key Gen Failed:" + ex?.message || ex);
+        }
     }
 
     function onSaveDBCheckClicked() {
@@ -56,34 +62,35 @@ function PrivateKeyGen() {
                 }
                 const metaData = await encryptWithPassword(encryptionPassword, privateKey);
                 if (await saveMetaData(metaData)) return setIsOpened(false);
+            }else {
+                setIsOpened(false);
             }
         } catch (error) {
             return setErrorMsg('Unable to save private key, ' + error);
         }
     }
 
-
     return (
         <>
             <div className="container pKeyGen">
-                <form onSubmit={onPkeyGenSubmit}>
+                <form onSubmit={onPkeyGenSubmit} className="mb16 pKeyGenForm">
                     <button type="submit" className="button genBtn" disabled={isOpened}>
                         Click Here To Generate Private Key
                     </button>
                 </form>
                 {isOpened && <div className="pKeyGenDisplay">
-                    <div>In order to sign a transaction, authorize the use of indexDB to save your private key client-side
-                        or copy your private key and insert in input provided to sign your transactions </div>
-                    <div>Your Private Key: {privateKey}</div>
+                    <div className="mb16">In order to sign a transaction, authorize the use of indexDB to save your private key client-side
+                        or copy your private key and insert in input provided to sign your transactions. </div>
+                    <div className="mb16">Your Private Key: {privateKey}</div>
                     <div>Your Address: {address}</div>
-                    <form onSubmit={onCloseSubmit}>
+                    <form onSubmit={onCloseSubmit} className="DBSaveCheckForm">
                         {errorMsg && <div className="errorMsg">{errorMsg}</div>}
-                        <label>
-                            Check the box to save in indexdDB
+                        <label className="saveDBLabel">
+                            <span>Check the box to save in indexdDB</span>
                             <input type="checkbox" value={isDBSaved} onClick={onSaveDBCheckClicked} />
                         </label>
-                        {isDBSaved && <label>
-                            Enter a Password for private key encryption
+                        {isDBSaved && <label className="encPassLabel">
+                                Enter a Password for private key encryption
                             <input type="text" value={encryptionPassword} onChange={setValue(setEncryptionPassword)} />
                         </label>}
                         <input type="submit" className="button" value="Close" />

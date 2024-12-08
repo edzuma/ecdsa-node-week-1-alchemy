@@ -9,7 +9,7 @@ app.use(express.json());
 const secp = require("ethereum-cryptography/secp256k1");
 const {hexToBytes} = require("ethereum-cryptography/utils");
 const{ keccak256 } = require("ethereum-cryptography/keccak");
-const {extractAddress, getBalances, updateBalances,setInitialBalance} = require("./utils");
+const {extractAddress, getBalances, updateBalances} = require("./utils");
 const {isAddress} = require("web3-validator");
 
 const balances = getBalances();
@@ -38,31 +38,39 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { to, amount, signature, recoveryBit } = req.body;
+  const { from, to, amount, signature, recoveryBit } = req.body;
   const tx = {
+    from,
     to,
     amount,
     nonce: 0
   }
   const hashedTX = keccak256(new TextEncoder().encode(JSON.stringify(tx)));
-  const pubKey = secp.recoverPublicKey(hashedTX,hexToByte(signature),BigInt(recoveryBit));
-  const isSigned = secp.verify(hexToByte(signature),hashedTX,pubKey);
-  const from = extractAddress(pubKey);
-  if(!isSigned) return res.status(401);
+  const pubKey = secp.recoverPublicKey(hashedTX,hexToBytes(signature),parseInt(recoveryBit));
+  const fromAdd = extractAddress(pubKey);
+  if(fromAdd.toLowerCase().trim() != from.toLowerCase().trim()) return res.status(409).send( {message: "invalid sender"});
+  const isSigned = secp.verify(hexToBytes(signature),hashedTX,pubKey);
+  if(!isSigned) return res.status(401).end();
 
   if(!isAddress(to)) return res.status(400).send({message: "invalid recipient address!"});
 
   setInitialBalance(to);
 
-  if (balances[from] < amount) {
+  if (balances[fromAdd] < amount) {
     res.status(400).send({ message: "Not enough funds!" });
   } else {
-    balances[from] -= amount;
+    balances[fromAdd] -= amount;
     balances[to] += amount;
-    res.send({ balance: balances[from] });
+    res.send({ balance: balances[fromAdd] });
     return updateBalances(balances);
   }
 });
+
+function setInitialBalance(address) {
+  if (!balances[address]) {
+      balances[address] = 0;
+  }
+}
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}!`);

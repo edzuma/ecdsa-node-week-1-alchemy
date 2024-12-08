@@ -18,15 +18,9 @@ function updateBalances(balances) {
     return writeFileSync("./balances.json", JSON.stringify(balances),)
 }
 
-function setInitialBalance(address) {
-    if (!balances[address]) {
-        balances[address] = 0;
-    }
-}
 
 module.exports = {
     extractAddress,
     getBalances, 
     updateBalances, 
-    setInitialBalance
 }

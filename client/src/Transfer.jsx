@@ -1,13 +1,12 @@
 import { useState } from "react";
 import server from "./server";
 import { sign } from "ethereum-cryptography/secp256k1";
-import {bytesToHex,hexToBytes} from "ethereum-cryptography/utils"
+import { bytesToHex, hexToBytes } from "ethereum-cryptography/utils"
 import { keccak256 } from "ethereum-cryptography/keccak";
 import { getAllMetaData, decryptWithPassword, extractAddress } from "./utils";
 
 
-function Transfer({ setBalance }) {
-  const [sender, setSender] = useState("");
+function Transfer({ setBalance,from }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -24,6 +23,7 @@ function Transfer({ setBalance }) {
 
   async function transfer(evt) {
     evt.preventDefault();
+    setErrorMsg("");
     if (!sendAmount || !recipient) {
       return setErrorMsg("fill out the inputs to transfer funds");
     }
@@ -33,34 +33,37 @@ function Transfer({ setBalance }) {
       setEncryptedPKeys(list.map(item => item.encryptedData));
     } catch (error) {
       return setErrorMsg("error getting encrypted private keys");
-      
+
     }
     setShowPkeyForm(true);
   }
 
   async function signTX(e) {
     e.preventDefault();
+    setErrorMsg("");
     let privateKey;
+    let sender;
     try {
-      if(isPasswordRequired){
-      const metaData = metaDataList.find((item) => item.encryptedData == selectedKey);
-      privateKey =  hexToBytes( await decryptWithPassword(encryptionPassword,metaData.iv, metaData.salt, metaData.encryptedData));
-      }else {
-        privateKey = hexToBytes(selectedKey);
+      if (isPasswordRequired) {
+        const metaData = metaDataList.find((item) => item.encryptedData == selectedKey);
+        privateKey = await decryptWithPassword(encryptionPassword, metaData.iv, metaData.salt, metaData.encryptedData);
+      } else {
+        privateKey = selectedKey;
       }
-      setSender(extractAddress(privateKey));
+      sender = extractAddress(privateKey);
+      if(sender.toLowerCase().trim() != from.toLowerCase().trim()) return setErrorMsg("invalid Sender!");
     } catch (error) {
-     return setErrorMsg("unable to decrypt with given password");
-
+      return setErrorMsg("unable to decrypt with given password" + error);
     }
     const tx = {
+      from: sender,
       to: recipient,
       amount: parseFloat(sendAmount),
       nonce: 0
     }
     const txStr = JSON.stringify(tx);
     const hashTx = keccak256(new TextEncoder().encode(txStr));
-    const [signature, recoveryBit] = await sign(bytesToHex(hashTx),privateKey,{recovered:true});
+    const [signature, recoveryBit] = await sign(bytesToHex(hashTx), hexToBytes(privateKey), { recovered: true });
 
     const body = {
       ...tx
@@ -72,21 +75,23 @@ function Transfer({ setBalance }) {
 
     try {
       const {
-        data: { balance },
+        data: { balance,message },
       } = await server.post(`/send`, body);
       setBalance(balance);
     } catch (ex) {
-     return setErrorMsg("transfer failed, "+ ex?.message || ex);
+      return setErrorMsg("transfer failed, " + ex?.message ||ex?.response?.data?.message || ex);
 
     }
   }
 
-
-  async function onSelectedKeyChange(key) {
-      const isInPKeyList = metaDataList.some((item) => item.encryptedData == key);
-      console.log(isInPKeyList);
-      if(isInPKeyList) setIsPasswordRequired(true);
+  async function handleEncKeyChange(key) {
+    const isInPKeyList = metaDataList.some((item) => item.encryptedData == key);
+    setSelectedKey(key);
+    setListOpen(false);
+ 
+    if (isInPKeyList) { setIsPasswordRequired(true) } else { setIsPasswordRequired(false); }
   }
+
 
   return (
     <div className="container transfer">
@@ -113,19 +118,22 @@ function Transfer({ setBalance }) {
         <input type="submit" className="button" value="Transfer" />
       </form>
       {showPkeyForm && <form onSubmit={signTX}>
-        <label>
-          Insert a private key to sign the transaction.
-          <input
-            placeholder="Type or select your private key"
-            value={selectedKey}
-            onChange={setValue(onSelectedKeyChange)}
-          ></input>
-          <button type="button" onClick={() => setListOpen(!listOpen)}>▼</button>
+        <label className="pkLabel">
+          <span className="pkLabelTxt">Insert a private key to sign the transaction.</span>
+          <span className="pkInputWrap">
+            <input
+              placeholder="Type or select your private key"
+              value={selectedKey}
+              onChange={setValue(handleEncKeyChange)}
+              onClick={()=>setListOpen(!listOpen)}
+            ></input>
+            <button type="button" className="dropDownBtn" onClick={() => setListOpen(!listOpen)}>▼</button>
+          </span>
         </label>
         {listOpen && (
-          <ul>
+          <ul className="pkList">
             {encryptedPKeys.map((pkey, index) => (
-              <li key={index} onClick={() => setSelectedKey(pkey)}>
+              <li key={index} onClick={() => handleEncKeyChange(pkey)}>
                 {pkey}
               </li>
             ))}
