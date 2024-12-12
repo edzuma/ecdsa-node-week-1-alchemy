@@ -28,7 +28,7 @@ function PrivateKeyGen() {
         try {
              await server.post(`/fund`, body);
           } catch (ex) {
-           throw  new Error("funding failed, "+ ex?.message ||ex?.response?.data?.message || ex);
+           throw  new Error("funding failed, "+ ex?.response?.data?.message || ex?.message || ex);
           }
     }
 
@@ -80,7 +80,10 @@ function PrivateKeyGen() {
                 </form>
                 {isOpened && <div className="pKeyGenDisplay">
                     <div className="mb16">In order to sign a transaction, authorize the use of indexDB to save your private key client-side
-                        or copy your private key and insert in input provided to sign your transactions. </div>
+                        or copy your private key and insert in input provided to sign your transactions. 
+                        <div>Every new Key will be funded with a balance of 100.00</div>
+                        </div>
+                        
                     <div className="mb16">Your Private Key: {privateKey}</div>
                     <div>Your Address: {address}</div>
                     <form onSubmit={onCloseSubmit} className="DBSaveCheckForm">

@@ -9,18 +9,42 @@ function extractAddress(pbKeyByte) {
     return address;
 }
 
-function getBalances() {
-    const data = readFileSync("./balances.json", { encoding: "utf-8" });
+function getAddrData() {
+    const data = readFileSync("./addressData.json", { encoding: "utf-8" });
     return JSON.parse(data);
 }
 
-function updateBalances(balances) {
-    return writeFileSync("./balances.json", JSON.stringify(balances),)
+function updateAddrData(addrData) {
+    return writeFileSync("./addressData.json", JSON.stringify(addrData),)
 }
+
+
+function getTransactions() {
+    const data = readFileSync("./transactions.json", { encoding: "utf-8" });
+    return JSON.parse(data);
+}
+
+function updateTransactions(transactions) {
+    return writeFileSync("./transactions.json", JSON.stringify(transactions),)
+}
+
+function getBlocks() {
+    const data = readFileSync("./blocks.json", { encoding: "utf-8" });
+    return JSON.parse(data);
+}
+
+function updateBlocks(blocks) {
+    return writeFileSync("./blocks.json", JSON.stringify(blocks),)
+}
+
 
 
 module.exports = {
     extractAddress,
-    getBalances, 
-    updateBalances, 
+    getAddrData, 
+    updateAddrData, 
+    getTransactions,
+    updateTransactions,
+    getBlocks,
+    updateBlocks
 }
