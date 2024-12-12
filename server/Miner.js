@@ -2,6 +2,7 @@ const {keccak256} = require("ethereum-cryptography/keccak");
 const {bytesToHex}  = require("ethereum-cryptography/utils");
 const {} = require("./transactions.json");
 const { updateTransactions, updateBlocks, getTransactions, getBlocks } = require("./utils");
+const { Block } = require("./Block");
 
 class Miner {
     constructor(maxTransactions, targetDifficulty){
@@ -17,29 +18,23 @@ class Miner {
     }
 
     run() {
-        const lastBlockIndex = this.blocks.length - 1;
-        const block = {id: this.blocks.length, timeStamp: Date.now(), nonce: 0, transctions: [], previousHash: lastBlockIndex >= 0 ? this.blocks[lastBlockIndex].hash : undefined };
+        const prevHash = this.blocks.length >= 0 ? this.blocks[this.blocks.length].hash : undefined
+        const block = new Block(this.blocks.length,prevHash);
         if(this.mempool.length < this.maxTransactions) return;
         for(let i = 0; i < this.maxTransactions; i++) {
             const tx = this.mempool.pop();
-            block.transctions.push(tx);
+            block.addTX(tx);
         }
         updateTransactions(this.mempool);
-        let hash;
-        let nonce = 0;
-        do {
-            block.nonce = nonce;
-            hash = bytesToHex(keccak256((new TextEncoder()).encode( JSON.stringify(block))));
-            nonce++;
-        }
-        while(BigInt(`0x${hash}`) >= this.targetDifficulty) 
-        block.hash = hash;
+        block.mine();
         return this.addBlock(block);
     }
 
     addBlock(block) {
+        this.blocks = getBlocks();
         this.blocks.push(block);
-        return updateBlocks(this.blocks);
+        if(this.verifyBlocks())
+            return updateBlocks(this.blocks);
     }
 
     verifyBlocks() {

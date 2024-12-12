@@ -8,6 +8,10 @@ class Transaction {
         this.to = to;
         this.amount = parseFloat(amount);
         this.nonce = parseInt(nonce);
+        this.confirmations = 0;
+        this.blockID = 0;
+        this.timeStamp = Date.now();
+        this.signature = "";
     }
 
     hash(isByte = false) {
@@ -31,14 +35,15 @@ class Transaction {
     }
 
    async get(IsSigned = false, privKeyHex = "") {
+        this.signature = (IsSigned && privKeyHex) ? bytesToHex(await this.sign(privKeyHex)) : undefined;
         const data = {
             from: this.from,
             to: this.to,
             amount: this.amount,
             nonce: this.nonce,
             hash: this.hash(),
-            signature: (IsSigned && privKeyHex) ? bytesToHex(await this.sign(privKeyHex)) : undefined,
-            timeStamp: Date.now()
+            signature: this.signature,
+            timeStamp: this.timeStamp,
           }; 
           return data;
     }

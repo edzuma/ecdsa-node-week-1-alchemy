@@ -19,7 +19,7 @@ function Blocks() {
                 {blocks.map((block, index) => (
                     <li key={index} onClick={() => handleBlockClick(tx)}>
                         <span className="blockAvatar"></span>
-                        <div>
+                        <div className="blockDataWrap">
                         <span className="id">{block.id}</span>
 
                         <div className="time">{new Date(block.timeStamp).toISOString()}</div>

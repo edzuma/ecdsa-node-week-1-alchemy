@@ -8,9 +8,9 @@ const { extractAddress, getAddrData, updateAddrData } = require("./utils");
 const { Transaction } = require("./Transaction");
 const { Miner } = require("./Miner");
 
+const {TARGET_DIFFICULTY, MAX_TRANSACTIONS} = require("./Block")
 
-const MAX_TRANSACTIONS = 10;
-const TARGET_DIFFICULTY = BigInt(0x0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+
 const FAUCET_PRIV_KEY = "13fab64184dc34c0c5232f15908d2740023905acc0ddc268c33e8ab0cf4a174a";
 
 const app = express();
