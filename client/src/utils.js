@@ -6,7 +6,6 @@ import { getPublicKey } from "ethereum-cryptography/secp256k1"
 export function createPrivateKey() {
     const pKeyByte = utils.randomPrivateKey();
     const hex = bytesToHex(pKeyByte);
-    console.log(hex);
     return hex;
 }
 

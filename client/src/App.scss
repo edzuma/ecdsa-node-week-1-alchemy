@@ -145,6 +145,64 @@ input {
   flex-direction: column;
   width: 50%;
 
+  .overlay {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 999;
+  }
+  
+  .modal {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    padding: 10px 15px;
+
+    min-width: 300px;
+    min-height: 250px;
+    max-width: 480px;
+    z-index: 9999;
+
+    .row {
+      display: flex;
+      margin-bottom: 15px;
+      gap: 20px;
+    }
+
+    .modalCol {
+      display: flex;
+      width: 47%;
+
+      .label {
+        margin-right: 12px;
+      }
+
+      .value {
+        word-break: break-all;
+      }
+    }
+
+    .headrow {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+
+      .closeBtn {
+        border-radius: 4px;
+        border: 1px solid #e3e2e2;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        cursor: pointer;
+      }
+    }
+  }
 
   .txList {
     display: flex;
@@ -153,7 +211,7 @@ input {
     padding-inline-start: 0;
     margin-block-start: 0;
     margin-block-end: 0;
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
 
 
@@ -164,7 +222,9 @@ input {
       padding: 5px 0px;
       padding-left: 5px;
       list-style: none;
+      text-align: center;
       cursor: pointer;
+
       &:hover {
         background-color: #e5e5e5fe;
       }
@@ -173,10 +233,12 @@ input {
         display: block;
         width: 35%
       }
+
       .value {
         display: block;
-        width:  35%;
+        width: 35%;
       }
+
       .time {
         display: block;
         width: 20%;
@@ -186,11 +248,108 @@ input {
 }
 
 
+
 .blocks {
   display: flex;
   flex-direction: column;
   width: 50%;
 
+  .tModal {
+    z-index: 99999;
+  }
+
+  .bModalOverlay {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 999;
+  }
+  
+
+
+
+  .bModal {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    padding: 10px 15px;
+
+    min-width: 300px;
+    min-height: 250px;
+    max-width: 960px;
+    z-index: 1000;
+    
+    .id {
+      margin-bottom: 15px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+  
+      .label {
+        margin-right: 12px;
+      }
+  
+      .value {
+        word-break: break-all;
+      }
+    }
+
+    .transactions {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin: 0;
+    }
+
+
+    .detailsWrap {
+      display: flex;
+
+      .bCol {
+        width: 50%;
+      }
+    }
+
+    .row {
+      display: flex;
+      margin-bottom: 15px;
+      gap: 20px;
+    }
+
+    .modalCol {
+      display: flex;
+      width: 47%;
+
+      .label {
+        margin-right: 12px;
+      }
+
+      .value {
+        word-break: break-all;
+      }
+    }
+
+    .headrow {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+
+      .closeBtn {
+        border-radius: 4px;
+        border: 1px solid #e3e2e2;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        cursor: pointer;
+      }
+    }
+  }
 
   .blockList {
     display: flex;
@@ -199,7 +358,7 @@ input {
     padding-inline-start: 0;
     margin-block-start: 0;
     margin-block-end: 0;
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
 
 
@@ -209,6 +368,7 @@ input {
       padding: 5px 0px;
       padding-left: 5px;
       list-style: none;
+
       &:hover {
         background-color: #e5e5e5fe;
       }
@@ -217,7 +377,7 @@ input {
         display: flex;
         flex: 0;
       }
-      
+
       .blockDataWrap {
         display: flex;
         flex-direction: column;
@@ -235,6 +395,7 @@ input {
     }
   }
 }
+
 
 
 

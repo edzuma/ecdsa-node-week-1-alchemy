@@ -3,7 +3,7 @@ import Transfer from "./Transfer";
 import PrivateKeyGen from "./PrivateKeyGen";
 import "./App.scss";
 import { useState } from "react";
-import Transactions from "./Transactions";
+import Transactions from "./UnconfirmedTransactions";
 import Blocks from "./Blocks";
 
 function App() {
@@ -22,11 +22,12 @@ function App() {
       />
       <Transfer setBalance={setBalance} from={address}/>
       </div>
-      <div className="col"><PrivateKeyGen/></div>
       <div className="col">
       <Transactions />
       <Blocks/>
       </div>
+      <div className="col"><PrivateKeyGen/></div>
+      
     </div>
   );
 }

@@ -81,6 +81,7 @@ function Transfer({ setBalance,from }) {
     } catch (error) {
       return setErrorMsg("Unable to decrypt with given password" + error);
     }
+
     let nonce = 0;
     try {
       const {
@@ -88,21 +89,32 @@ function Transfer({ setBalance,from }) {
       } = await server.get(`nonce/${sender}`);
       nonce = data.nonce;
     } catch (error) {
-      return setErrorMsg("unable to query address" + error);
+      return setErrorMsg("unable to query address nonce" + error);
     }
-    const tx = {
+
+    let timeStamp;
+    try {
+      const {
+        data
+      } = await server.get(`/timestamp`);
+      timeStamp = data.timeStamp;
+    } catch (error) {
+      return setErrorMsg("unable to query time" + error);
+    }
+
+    const txData = {
       from: sender,
       to: recipient,
       amount: parseFloat(sendAmount),
-      nonce
+      nonce,
+      timeStamp
     };
-    console.log(tx);
-    const txStr = JSON.stringify(tx);
-    const hashTx = keccak256(new TextEncoder().encode(txStr));
+
+    const hashTx = keccak256(new TextEncoder().encode(JSON.stringify(txData)));
     const [signature, recoveryBit] = await sign(bytesToHex(hashTx), hexToBytes(privateKey), { recovered: true });
 
     const body = {
-      ...tx
+      ...txData
     };
 
 
@@ -115,7 +127,6 @@ function Transfer({ setBalance,from }) {
       } = await server.post(`/send`, body);
       setBalance(balance);
     } catch (ex) {
-      console.log(ex);
       return setErrorMsg("Transfer failed!, " + ex?.response?.data?.message || ex?.message ||  ex);
     }
     setOkMsg("Transfer successful!");

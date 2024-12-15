@@ -1,6 +1,3 @@
-const {keccak256} = require("ethereum-cryptography/keccak");
-const {bytesToHex}  = require("ethereum-cryptography/utils");
-const {} = require("./transactions.json");
 const { updateTransactions, updateBlocks, getTransactions, getBlocks } = require("./utils");
 const { Block } = require("./Block");
 
@@ -18,8 +15,8 @@ class Miner {
     }
 
     run() {
-        const prevHash = this.blocks.length >= 0 ? this.blocks[this.blocks.length].hash : undefined
-        const block = new Block(this.blocks.length,prevHash);
+        const prevHash = this.blocks.length > 0 ? this.blocks[this.blocks.length-1].hash : undefined
+        const block = new Block(this.blocks.length + 1,prevHash);
         if(this.mempool.length < this.maxTransactions) return;
         for(let i = 0; i < this.maxTransactions; i++) {
             const tx = this.mempool.pop();

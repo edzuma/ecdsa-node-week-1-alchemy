@@ -24,37 +24,6 @@ app.use(express.json());
 
 
 
-
-
-
-app.post("/fund", async (req, res) => {
-  const { message, signature, recoveryBit } = req.body;
-  const pubKey = secp.recoverPublicKey(message, hexToBytes(signature), parseInt(recoveryBit));
-  const address = extractAddress(pubKey);
-  if (!isAddress(address)) return res.status(400).send({ message: "invalid address!" });
-  const isSigned = secp.verify(hexToBytes(signature), keccak256(hexToBytes(address.slice(2))), pubKey);
-  if (isSigned) {
-    setInitialBalance(address);
-    addrData.faucet.balance -= 100;
-    addrData[address].balance = 100;
-    const data =
-    {
-      from: addrData.faucet.address,
-      to: address,
-      amount: 100,
-      nonce: addrData.faucet.nonce,
-    };
-    const tx = new Transaction(data.from, data.to, data.amount, data.nonce);
-    const txData = await tx.get(true, FAUCET_PRIV_KEY);
-    miner.addTx(txData);
-    res.status(200).end();
-    addrData.faucet.nonce += 1;
-    updateAddrData(addrData);
-    return miner.run();
-  }
-  return res.status(401).end();
-})
-
 app.get("/balance/:address", (req, res) => {
   const { address } = req.params;
   const balance = addrData[address].balance || 0;
@@ -74,16 +43,48 @@ app.get("/nonce/:address", (req, res) => {
   res.send({ nonce });
 });
 
+app.get("/timestamp", (_, res) => {
+  return res.send({timeStamp: Date.now()});
+});
+
+app.post("/fund", async (req, res) => {
+  const { message, signature, recoveryBit } = req.body;
+  const pubKey = secp.recoverPublicKey(message, hexToBytes(signature), parseInt(recoveryBit));
+  const address = extractAddress(pubKey);
+  if (!isAddress(address)) return res.status(400).send({ message: "invalid address!" });
+  const isSigned = secp.verify(hexToBytes(signature), keccak256(hexToBytes(address.slice(2))), pubKey);
+  if (isSigned) {
+    setInitialBalance(address);
+    addrData.faucet.balance -= 100;
+    addrData[address].balance = 100;
+    const data =
+    {
+      from: addrData.faucet.address,
+      to: address,
+      amount: 100,
+      nonce: addrData.faucet.nonce,
+      timeStamp: Date.now()
+    };
+    const tx = new Transaction(data.from, data.to, data.amount, data.nonce, data.timeStamp);
+    const txData = await tx.get(true, FAUCET_PRIV_KEY);
+    miner.addTx(txData);
+    res.status(200).end();
+    addrData.faucet.nonce += 1;
+    updateAddrData(addrData);
+    return miner.run();
+  }
+  return res.status(401).end();
+})
+
+
+
 app.post("/send", async (req, res) => {
-  const { from, to, amount, nonce, signature, recoveryBit } = req.body;
+  const { from, to, amount, nonce, signature, timeStamp, recoveryBit } = req.body;
   if (!isAddress(to)) return res.status(400).send({ message: "invalid recipient address!" });
-  const tx = new Transaction(from, to, parseFloat(amount), parseInt(nonce));
+  const tx = new Transaction(from, to, parseFloat(amount), parseInt(nonce),timeStamp);
   const hash = tx.hash(true);
   const pubKey = secp.recoverPublicKey(hash, hexToBytes(signature), parseInt(recoveryBit));
   const fromAdd = extractAddress(pubKey);
-  console.log(fromAdd);
-  console.log(`${fromAdd}`.toLowerCase().trim());
-  console.log(`${from}`.toLowerCase().trim());
   if (fromAdd.toLowerCase().trim() != from.toLowerCase().trim()) return res.status(409).send({ message: "invalid sender" });
   if (addrData[fromAdd].nonce != nonce) return res.status(409).send({ message: "invalid transaction" });
   const isSigned = tx.verify(hexToBytes(signature), pubKey);

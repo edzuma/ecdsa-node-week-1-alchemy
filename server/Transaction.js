@@ -3,15 +3,13 @@ const secp = require("ethereum-cryptography/secp256k1");
 const {keccak256} = require("ethereum-cryptography/keccak");
 const  {bytesToHex,hexToBytes}= require("ethereum-cryptography/utils")
 class Transaction {
-    constructor(from,to,amount,nonce) {
+    constructor(from,to,amount,nonce,timeStamp) {
         this.from = from;
         this.to = to;
         this.amount = parseFloat(amount);
         this.nonce = parseInt(nonce);
-        this.confirmations = 0;
-        this.blockID = 0;
-        this.timeStamp = Date.now();
-        this.signature = "";
+        this.timeStamp =timeStamp;
+        this.signature = undefined;
     }
 
     hash(isByte = false) {
@@ -20,6 +18,7 @@ class Transaction {
             to: this.to,
             amount: this.amount,
             nonce: this.nonce,
+            timeStamp: this.timeStamp
           }; 
         const byte = keccak256(new TextEncoder().encode(JSON.stringify(data)))
         return isByte ? byte : bytesToHex(byte);
@@ -27,7 +26,14 @@ class Transaction {
 
 
     async sign(privKeyHex,isRecoverable = false) {
-        return await secp.sign(this.hash(true), hexToBytes(privKeyHex),{recovered:isRecoverable});
+        if(isRecoverable) {
+            const [signature,recoveryBit] = await secp.sign(this.hash(true), hexToBytes(privKeyHex),{recovered:isRecoverable});
+            this.signature = bytesToHex(signature);
+            return [signature,recoveryBit];
+        }
+        const signature = await secp.sign(this.hash(true), hexToBytes(privKeyHex),{recovered:isRecoverable});
+        this.signature = bytesToHex(signature);
+        return signature;
     }
     
     verify(signatureByte, pubKeyByte) {
@@ -41,9 +47,9 @@ class Transaction {
             to: this.to,
             amount: this.amount,
             nonce: this.nonce,
+            timeStamp: this.timeStamp,
             hash: this.hash(),
             signature: this.signature,
-            timeStamp: this.timeStamp,
           }; 
           return data;
     }
